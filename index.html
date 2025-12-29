@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cámara Seguridad APK</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; padding: 20px; }
+        video { width: 100%; max-width: 500px; border-radius: 10px; background: black; margin-top: 10px; }
+        .btn { padding: 15px; margin: 10px; border: none; border-radius: 5px; color: white; font-weight: bold; width: 80%; cursor: pointer; }
+        .btn-transmitir { background: #28a745; }
+        .btn-ver { background: #007bff; }
+        input { padding: 12px; width: 80%; border-radius: 5px; margin: 10px 0; color: black; }
+        #my-id { font-size: 18px; color: #ffc107; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Cámara de Seguridad</h2>
+    <div id="setup">
+        <button class="btn btn-transmitir" onclick="startTransmitting()">1. TRANSMITIR (Cámara)</button>
+        <p id="my-id"></p>
+        <hr style="border: 0.5px solid #444;">
+        <input type="text" id="remote-id" placeholder="Pegar ID aquí">
+        <button class="btn btn-ver" onclick="startWatching()">2. VER (Monitor)</button>
+    </div>
+    <video id="localVideo" autoplay playsinline muted></video>
+    <video id="remoteVideo" autoplay playsinline></video>
+
+    <script>
+        const peer = new Peer();
+        let localStream;
+
+        peer.on('open', id => console.log('ID:', id));
+
+        async function startTransmitting() {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: true });
+            document.getElementById('localVideo').srcObject = localStream;
+            document.getElementById('my-id').innerText = "ID DE ESTA CÁMARA: " + peer.id;
+            peer.on('call', call => call.answer(localStream));
+        }
+
+        function startWatching() {
+            const remoteId = document.getElementById('remote-id').value;
+            const call = peer.call(remoteId, new MediaStream());
+            call.on('stream', stream => {
+                document.getElementById('remoteVideo').srcObject = stream;
+                document.getElementById('setup').style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
